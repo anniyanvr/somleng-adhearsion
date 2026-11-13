@@ -1,0 +1,109 @@
+---
+http_interactions:
+- request:
+    method: get
+    uri: https://demo.twilio.com/docs/voice.xml?AccountSid=1b2ce123-cffc-4188-bdb6-d6a76ab10cf1&ApiVersion=2010-04-01&CallSid=9802a301-aed5-41c8-b662-e3d3180a3eb4&CallStatus=ringing&Called=85512456869&Caller=1000&Direction=inbound&From=1000&To=85512456869
+    body:
+      encoding: ASCII-8BIT
+      string: ''
+    headers:
+      Content-Type:
+      - application/x-www-form-urlencoded; charset=utf-8
+      User-Agent:
+      - TwilioProxy/1.1
+      Accept:
+      - text/xml, application/xml, text/html
+      Cache-Control:
+      - max-age=259200
+      X-Twilio-Signature:
+      - 0+b0ct1SJKoITuPmOFqDiFGTgFI=
+      Connection:
+      - close
+      Host:
+      - demo.twilio.com
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Mon, 16 Mar 2026 16:55:37 GMT
+      Content-Type:
+      - text/xml
+      Content-Length:
+      - '209'
+      Connection:
+      - close
+      Server:
+      - nginx
+      Last-Modified:
+      - Wed, 11 Feb 2026 00:49:07 GMT
+      Vary:
+      - Accept-Encoding
+      Etag:
+      - '"698bd203-d1"'
+      X-Shenanigans:
+      - none
+      Accept-Ranges:
+      - bytes
+    body:
+      encoding: ASCII-8BIT
+      string: |-
+        <?xml version="1.0" encoding="UTF-8"?>
+        <Response>
+            <Say voice="Polly.Joanna-Generative">Thanks for trying our documentation. Enjoy!</Say>
+            <Play>http://demo.twilio.com/docs/classic.mp3</Play>
+        </Response>
+  recorded_at: Mon, 16 Mar 2026 16:55:38 GMT
+- request:
+    method: post
+    uri: http://services.lvh.me:3000/tts_events
+    body:
+      encoding: UTF-8
+      string: '{"phone_call":"9802a301-aed5-41c8-b662-e3d3180a3eb4","tts_voice":"Basic.Kal","num_chars":43}'
+    headers:
+      Accept:
+      - application/json
+      Content-Type:
+      - application/json
+      User-Agent:
+      - Faraday v2.14.0
+      Authorization:
+      - Basic c2VydmljZXM6cGFzc3dvcmQ=
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+  response:
+    status:
+      code: 201
+      message: Created
+    headers:
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-Xss-Protection:
+      - '0'
+      X-Content-Type-Options:
+      - nosniff
+      X-Permitted-Cross-Domain-Policies:
+      - none
+      Referrer-Policy:
+      - strict-origin-when-cross-origin
+      Content-Type:
+      - application/vnd.api+json
+      Cache-Control:
+      - no-cache
+      X-Request-Id:
+      - f90ba008-3016-4ac1-9854-8fdeca8b0b35
+      X-Runtime:
+      - '0.304286'
+      Server-Timing:
+      - sql.active_record;dur=75.50, start_processing.action_controller;dur=0.00,
+        describe_voices.Polly.aws;dur=5.71, instantiation.active_record;dur=9.76,
+        start_transaction.active_record;dur=0.00, transaction.active_record;dur=9.71,
+        process_action.action_controller;dur=152.34
+      Content-Length:
+      - '0'
+    body:
+      encoding: UTF-8
+      string: ''
+  recorded_at: Mon, 16 Mar 2026 16:55:38 GMT
+recorded_with: VCR 6.4.0

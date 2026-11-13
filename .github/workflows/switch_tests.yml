@@ -1,0 +1,64 @@
+name: Switch
+on: workflow_call
+
+env:
+  CI: true
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: components/app
+
+    env:
+      AHN_ENV: test
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install native dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install libpcre3-dev
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          working-directory: components/app
+          bundler-cache: true
+
+      - name: Run Specs
+        run: |
+          bundle exec rspec
+
+      - name: Run FreeSWITCH tests
+        working-directory: components/freeswitch
+        run: |
+          ./tests/tests.sh
+
+      - name: Setup Go
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: ".tool-versions"
+          cache-dependency-path: components/freeswitch_event_processor/go.sum
+
+      - name: Run FreeSWITCH Stats Logger tests
+        working-directory: components/freeswitch_stats_logger
+        run: |
+          go get .
+          go test
+
+      - name: Run FreeSWITCH Event Processor tests
+        working-directory: components/freeswitch_event_processor
+        run: |
+          go get .
+          go test
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v7
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}

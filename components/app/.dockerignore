@@ -1,0 +1,13 @@
+.git
+.github
+.bundle
+coverage
+**/*.key
+deploy
+docs
+docker
+infrastructure
+log
+spec
+tmp
+vendor/bundle

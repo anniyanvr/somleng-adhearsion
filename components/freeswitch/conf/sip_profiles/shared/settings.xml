@@ -1,0 +1,20 @@
+<include>
+  <param name="sip-trace" value="$${sip_trace}"/>
+
+  <!-- If we use localnet.auto then inbound requests from OpenSIPS -->
+  <!-- will be treated as local and the ext-sip-ip and ext-rtp-ip will not be used -->
+  <param name="local-network-acl" value="loopback.auto"/>
+
+  <param name="sip-ip" value="$${local_ip_v4}"/>
+  <param name="rtp-ip" value="$${local_ip_v4}"/>
+
+  <param name="bind-params" value="transport=udp"/>
+  <param name="codec-prefs" value="G729,G722,PCMU,PCMA,GSM"/>
+
+  <param name="context" value="default"/>
+  <param name="disable-register" value="true"/>
+  <param name="rtp-timer-name" value="soft"/>
+
+  <param name="user-agent-string" value="SomlengSWITCH"/>
+  <param name="inbound-late-negotiation" value="true"/>
+</include>

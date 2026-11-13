@@ -1,0 +1,197 @@
+name: Integration Tests
+on: workflow_call
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    env:
+      PGHOST: localhost
+      PGUSER: postgres
+      CI: true
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ""
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        # needed because the postgres container does not provide a healthcheck
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      # Login to AWS to avoid rate limit
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          role-skip-session-tagging: true
+          role-duration-seconds: 3600
+          aws-region: ap-southeast-1
+
+      - name: Login to AWS Public ECR
+        uses: docker/login-action@v4
+        with:
+          registry: public.ecr.aws
+        env:
+          AWS_REGION: us-east-1
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build Switch App
+        uses: docker/build-push-action@v7
+        with:
+          push: false
+          load: true
+          context: components/app
+          tags: switch-app:latest
+          cache-from: type=gha,scope=integration-tests-switch-app
+          cache-to: type=gha,mode=max,scope=integration-tests-switch-app
+
+      - name: Build FreeSWITCH
+        uses: docker/build-push-action@v7
+        with:
+          push: false
+          load: true
+          context: components/freeswitch
+          build-args: signalwire_token=${{ secrets.SIGNALWIRE_TOKEN }}
+          tags: freeswitch:latest
+          cache-from: type=gha,scope=integration-tests-freeswitch
+          cache-to: type=gha,mode=max,scope=integration-tests-freeswitch
+
+      - name: Build FreeSWITCH Stats Logger
+        uses: docker/build-push-action@v7
+        with:
+          push: false
+          load: true
+          context: components/freeswitch_stats_logger
+          tags: freeswitch_stats_logger:latest
+          cache-from: type=gha,scope=integration-tests-freeswitch-stats-logger
+          cache-to: type=gha,mode=max,scope=integration-tests-freeswitch-stats-logger
+
+      - name: Build FreeSWITCH Event Processor
+        uses: docker/build-push-action@v7
+        with:
+          push: false
+          load: true
+          context: components/freeswitch_event_processor
+          tags: freeswitch_event_processor:latest
+          cache-from: type=gha,scope=integration-tests-freeswitch-event-processor
+          cache-to: type=gha,mode=max,scope=integration-tests-freeswitch-event-processor
+
+      - name: Build Public Gateway
+        uses: docker/build-push-action@v7
+        with:
+          push: false
+          load: true
+          context: components/gateway
+          target: public_gateway
+          tags: public_gateway:latest
+          cache-from: type=gha,scope=integration-tests-public-gateway
+          cache-to: type=gha,mode=max,scope=integration-tests-public-gateway
+
+      - name: Build Client Gateway
+        uses: docker/build-push-action@v7
+        with:
+          push: false
+          load: true
+          context: components/gateway
+          target: client_gateway
+          tags: client_gateway:latest
+          cache-from: type=gha,scope=integration-tests-client-gateway
+          cache-to: type=gha,mode=max,scope=integration-tests-client-gateway
+
+      - name: Build Media Proxy
+        uses: docker/build-push-action@v7
+        with:
+          push: false
+          load: true
+          context: components/media_proxy
+          tags: media_proxy:latest
+          cache-from: type=gha,scope=integration-tests-media-proxy
+          cache-to: type=gha,mode=max,scope=integration-tests-media-proxy
+
+      - name: Build Gateway Bootstrap
+        uses: docker/build-push-action@v7
+        with:
+          push: false
+          load: true
+          context: components/gateway
+          target: bootstrap
+          tags: gateway:bootstrap
+          cache-from: type=gha,scope=integration-tests-gateway-bootstrap
+          cache-to: type=gha,mode=max,scope=integration-tests-gateway-bootstrap
+
+      - name: Build Rating Engine
+        uses: docker/build-push-action@v7
+        with:
+          push: false
+          load: true
+          target: debug
+          context: components/rating_engine
+          tags: rating-engine:latest-debug
+          cache-from: type=gha,scope=integration-tests-rating-engine
+          cache-to: type=gha,mode=max,scope=integration-tests-rating-engine
+
+      - name: Build Testing
+        uses: docker/build-push-action@v7
+        with:
+          push: false
+          load: true
+          context: components/testing
+          tags: testing:latest
+          cache-from: type=gha,scope=integration-tests-testing
+          cache-to: type=gha,mode=max,scope=integration-tests-testing
+
+      - name: Build Fake Call Platform
+        uses: docker/build-push-action@v7
+        with:
+          push: false
+          load: true
+          context: components/fake_call_platform
+          tags: fake_call_platform:latest
+          cache-from: type=gha,scope=integration-tests-fake-call-platform
+          cache-to: type=gha,mode=max,scope=integration-tests-fake-call-platform
+
+      - name: Run docker compose
+        run: |
+          docker compose run -e DATABASE_NAME=opensips_public_gateway_test gateway-bootstrap create_db public_gateway
+          docker compose run -e DATABASE_NAME=opensips_client_gateway_test gateway-bootstrap create_db client_gateway
+          docker compose up --wait -d
+
+      - name: Run Integration Tests
+        run: |
+          docker compose exec testing ./tests.sh
+
+      - name: Fetch logs from container
+        if: failure()
+        run: |
+          mkdir -p tmp/logs
+          mkdir -p tmp/connect_stream_test_files
+          docker compose exec testing sh -c 'tar cf - *_messages.log' | tar xf - -C tmp/
+          docker compose exec testing sh -c 'tar cf - cdr-server.log' | tar xf - -C tmp/
+          docker compose exec testing sh -c 'tar cf - decoded_cdr_server.log' | tar xf - -C tmp/
+          docker compose exec testing sh -c 'tar cf - -C /testing connect_stream_test_files' | tar xf - -C tmp/
+          docker compose logs freeswitch > tmp/freeswitch.log
+          docker compose logs switch-app > tmp/switch-app
+          docker compose logs public_gateway > tmp/public_gateway.log
+          docker compose logs client_gateway > tmp/client_gateway.log
+          docker compose logs media_proxy > tmp/media_proxy.log
+          docker compose logs rating-engine > tmp/rating-engine.log
+
+      - name: Upload logs
+        uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: error_logs
+          path: tmp

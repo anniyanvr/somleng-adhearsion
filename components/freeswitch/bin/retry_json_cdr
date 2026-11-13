@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+
+REQUIRED_ENV_VARS=("FS_LOG_DIRECTORY" "FS_MOD_JSON_CDR_URL")
+MOD_JSON_CDR_USER="services"
+
+# Loop through and check if each is set
+for var in "${REQUIRED_ENV_VARS[@]}"; do
+  if [[ -z "${!var}" ]]; then
+    echo "Error: $var environment variable is not set."
+    exit 1
+  fi
+done
+
+user_encoding=""
+dry_run=false
+
+# Parse arguments
+for arg in "$@"; do
+  case "$arg" in
+    base64|json)
+      user_encoding="$arg"
+      ;;
+    --dry-run)
+      dry_run=true
+      ;;
+    *)
+      echo "Usage: $0 [base64|json] [--dry-run]"
+      exit 1
+      ;;
+  esac
+done
+
+echo "$user_encoding"
+echo "$dry_run"
+
+for file in "$FS_LOG_DIRECTORY"/*.json; do
+  if [[ -f "$file" ]]; then
+    echo "Processing $file..."
+
+    raw_content=$(<"$file")
+
+    # Use flag if provided, otherwise auto-detect
+    if [[ -n "$user_encoding" ]]; then
+      encoding="$user_encoding"
+    else
+      if echo "$raw_content" | sed -E 's/: *nan([,}])/: null\1/g' | jq empty >/dev/null 2>&1; then
+        encoding="json"
+      else
+        encoding="base64"
+      fi
+    fi
+
+    echo "Detected/selected encoding: $encoding...."
+
+    # Prepare payload
+    if [[ "$encoding" == "json" ]]; then
+      content=$(printf "%s" "$raw_content" | base64)
+    else
+      content="$raw_content"
+    fi
+
+    if [[ "$dry_run" == true ]]; then
+      echo "[DRY-RUN] Would upload $file to $FS_MOD_JSON_CDR_URL with encoding: $encoding"
+      echo "[DRY-RUN] Would remove $file after successful upload"
+    else
+      http_status=$(curl -s -o /dev/null -w "%{http_code}" "$FS_MOD_JSON_CDR_URL" \
+        -H "Content-Type: application/x-www-form-base64-encoded" \
+        -u "${MOD_JSON_CDR_USER}:${FS_MOD_JSON_CDR_PASSWORD}" \
+        --data "cdr=$content")
+
+      if [[ "$http_status" =~ ^2 ]]; then
+        echo "Upload successful (HTTP $http_status), removing $file"
+        rm "$file"
+      else
+        echo "Upload failed (HTTP $http_status), keeping $file"
+      fi
+    fi
+  fi
+done

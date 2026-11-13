@@ -1,0 +1,84 @@
+name: Deploy Media Proxy
+on:
+  workflow_call:
+    inputs:
+      buildConfig:
+        required: true
+        type: string
+
+env:
+  REPOSITORY_NAME: media-proxy
+
+jobs:
+  set-deployment-matrix:
+    name: Set Deployment Matrix
+    runs-on: ubuntu-latest
+    outputs:
+      deployMatrix: ${{ steps.set-deployment-matrix.outputs.deployMatrix }}
+
+    steps:
+      - name: Set Deployment Matrix
+        id: set-deployment-matrix
+        run: |
+          buildConfig=${{ toJSON(inputs.buildConfig) }}
+          matrixSource=$(cat << EOF
+          [
+            {
+              "environment": "staging",
+              "identifier": "media-proxy-staging",
+              "ecs_service": "media-proxy-staging",
+              "ecs_cluster": "somleng-switch-staging"
+            },
+            {
+              "environment": "production",
+              "identifier": "media-proxy",
+              "ecs_service": "media-proxy",
+              "ecs_cluster": "somleng-switch"
+            }
+          ]
+          EOF
+          )
+          matched=$(echo "$matrixSource" | jq --argjson bc "$buildConfig" 'map(select(.environment == $bc.environment)) | .[0]')
+          mergedConfig=$(jq -n --argjson a "$buildConfig" --argjson b "$matched" '$b + $a')
+          mergedConfig=$(echo "$mergedConfig" | jq -c '.')
+          echo "deployMatrix={\"region\":[\"ap-southeast-1\"],\"include\":[$mergedConfig]}" >> $GITHUB_OUTPUT
+
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    needs:
+      - set-deployment-matrix
+
+    strategy:
+      matrix: ${{fromJson(needs.set-deployment-matrix.outputs.deployMatrix)}}
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          role-skip-session-tagging: true
+          role-duration-seconds: 3600
+          aws-region: ${{ matrix.region }}
+
+      - name: Get current task definition
+        run: |
+          aws ecs describe-task-definition --task-definition "${{ matrix.identifier }}" --query 'taskDefinition' > task-definition.json
+
+      - name: Inject new image into task definition
+        id: render-task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: media_proxy
+          image: ${{ secrets.ECR_REGISTRY }}/${{ env.REPOSITORY_NAME }}:${{ matrix.image_tag }}
+
+      - name: Deploy
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.render-task-def.outputs.task-definition }}
+          service: ${{ matrix.ecs_service }}
+          cluster: ${{ matrix.ecs_cluster }}
+          wait-for-service-stability: true

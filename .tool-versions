@@ -1,2 +1,4 @@
-ruby 2.7.4
-terraform 0.14.7
+terraform 1.14.7
+ruby 3.3.10
+golang 1.26.1
+nodejs 24.13.1

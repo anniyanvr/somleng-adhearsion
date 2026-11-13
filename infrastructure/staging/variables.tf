@@ -1,3 +1,79 @@
-variable "aws_region" {
+variable "azure_region" {
+  default = "southeastasia"
+}
+
+variable "aws_default_region" {
   default = "ap-southeast-1"
+}
+
+variable "aws_helium_region" {
+  default = "us-east-1"
+}
+
+variable "ecs_cluster_name" {
+  default = "somleng-switch-staging"
+}
+
+variable "app_environment" {
+  default = "staging"
+}
+
+variable "switch_identifier" {
+  default = "switch-staging"
+}
+
+variable "rating_engine_identifier" {
+  default = "rating-engine-staging"
+}
+
+variable "services_identifier" {
+  default = "switch-services-staging"
+}
+
+variable "s3_mpeg_identifier" {
+  default = "s3-mpeg-staging"
+}
+
+variable "public_gateway_identifier" {
+  default = "public-gateway-staging"
+}
+
+variable "client_gateway_identifier" {
+  default = "client-gateway-staging"
+}
+
+variable "media_proxy_identifier" {
+  default = "media-proxy-staging"
+}
+
+variable "client_gateway_db_name" {
+  default = "opensips_client_gateway_staging"
+}
+
+variable "public_gateway_db_name" {
+  default = "opensips_public_gateway_staging"
+}
+
+variable "sip_port" {
+  default = 6060
+}
+
+variable "internal_sip_port" {
+  default = 6061
+}
+
+variable "sip_alternative_port" {
+  default = 6080
+}
+
+variable "freeswitch_event_socket_port" {
+  default = 8021
+}
+
+variable "freeswitch_log_level" {
+  default = "debug"
+}
+
+variable "freeswitch_sip_trace" {
+  default = "yes"
 }

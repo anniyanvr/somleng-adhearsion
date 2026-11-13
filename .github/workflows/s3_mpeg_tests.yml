@@ -1,0 +1,37 @@
+name: S3 MPEG
+on: workflow_call
+
+env:
+  CI: true
+  REPOSITORY_NAME: s3-mpeg
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: components/s3_mpeg
+
+    steps:
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+        working-directory: .
+
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          working-directory: components/s3_mpeg
+          bundler-cache: true
+
+      - name: Run Specs
+        run: |
+          bundle exec rspec
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v7
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}

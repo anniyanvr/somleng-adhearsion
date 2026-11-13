@@ -1,31 +1,59 @@
-resource "aws_ecrpublic_repository" "app" {
-  repository_name = "somleng-switch"
-  provider = aws.us-east-1
-
-  catalog_data {
-    about_text        = "Somleng Switch"
-    architectures     = ["Linux"]
-    description       = "SomlengSWITCH is the switch layer for Somleng. It includes an open source TwiML interpreter"
-  }
+module "public_gateway_ecr_repository" {
+  source = "../modules/ecr_repository"
+  name   = "public-gateway"
 }
 
-resource "aws_ecrpublic_repository" "nginx" {
-  repository_name = "somleng-switch-nginx"
-  provider = aws.us-east-1
-
-  catalog_data {
-    about_text        = "Somleng Switch Nginx"
-    architectures     = ["Linux"]
-  }
+module "client_gateway_ecr_repository" {
+  source = "../modules/ecr_repository"
+  name   = "client-gateway"
 }
 
-resource "aws_ecrpublic_repository" "freeswitch" {
-  repository_name = "somleng-switch-freeswitch"
-  provider = aws.us-east-1
+module "media_proxy_ecr_repository" {
+  source = "../modules/ecr_repository"
+  name   = "media-proxy"
+}
 
-  catalog_data {
-    about_text        = "Somleng Switch FreeSWITCH"
-    architectures     = ["Linux"]
-    description       = "FreeSWITCH configuration optimized for Somleng"
-  }
+module "gateway_scheduler_ecr_repository" {
+  source = "../modules/ecr_repository"
+  name   = "gateway-scheduler"
+}
+
+module "app_ecr_repository" {
+  source = "../modules/ecr_repository"
+  name   = "switch-app"
+}
+
+module "webserver_ecr_repository" {
+  source = "../modules/ecr_repository"
+  name   = "switch-webserver"
+}
+
+module "freeswitch_ecr_repository" {
+  source = "../modules/ecr_repository"
+  name   = "freeswitch"
+}
+
+module "freeswitch_stats_logger_ecr_repository" {
+  source = "../modules/ecr_repository"
+  name   = "freeswitch-stats-logger"
+}
+
+module "freeswitch_event_processor_ecr_repository" {
+  source = "../modules/ecr_repository"
+  name   = "freeswitch-event-processor"
+}
+
+module "s3_mpeg_ecr_repository" {
+  source = "../modules/ecr_repository"
+  name   = "s3-mpeg"
+}
+
+module "services_ecr_repository" {
+  source = "../modules/ecr_repository"
+  name   = "switch-services"
+}
+
+module "rating_engine_ecr_repository" {
+  source = "../modules/ecr_repository"
+  name   = "rating-engine"
 }

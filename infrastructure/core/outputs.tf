@@ -1,11 +1,51 @@
-output "app_ecr_repository" {
-  value = aws_ecrpublic_repository.app.repository_uri
+output "public_gateway_ecr_repository" {
+  value = module.public_gateway_ecr_repository
 }
 
-output "nginx_ecr_repository" {
-  value = aws_ecrpublic_repository.nginx.repository_uri
+output "client_gateway_ecr_repository" {
+  value = module.client_gateway_ecr_repository
+}
+
+output "media_proxy_ecr_repository" {
+  value = module.media_proxy_ecr_repository
+}
+
+output "gateway_scheduler_ecr_repository" {
+  value = module.gateway_scheduler_ecr_repository
+}
+
+output "app_ecr_repository" {
+  value = module.app_ecr_repository
+}
+
+output "webserver_ecr_repository" {
+  value = module.webserver_ecr_repository
 }
 
 output "freeswitch_ecr_repository" {
-  value = aws_ecrpublic_repository.freeswitch.repository_uri
+  value = module.freeswitch_ecr_repository
+}
+
+output "freeswitch_stats_logger_ecr_repository" {
+  value = module.freeswitch_stats_logger_ecr_repository
+}
+
+output "freeswitch_event_processor_ecr_repository" {
+  value = module.freeswitch_event_processor_ecr_repository
+}
+
+output "s3_mpeg_ecr_repository" {
+  value = module.s3_mpeg_ecr_repository
+}
+
+output "services_ecr_repository" {
+  value = module.services_ecr_repository
+}
+
+output "rating_engine_ecr_repository" {
+  value = module.rating_engine_ecr_repository
+}
+
+output "public_gateway_nlb" {
+  value = module.public_gateway_nlb
 }

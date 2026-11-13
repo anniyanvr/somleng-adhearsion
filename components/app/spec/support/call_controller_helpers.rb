@@ -1,0 +1,100 @@
+module CallControllerHelpers
+  def build_controller(call: build_fake_call, call_properties: {}, **options)
+    controller = CallController.new(call, call_properties: build_call_properties(**call_properties))
+    stub_controller_voice_commands(controller, voice_commands: options[:stub_voice_commands])
+    controller
+  end
+
+  def build_call_properties(**options)
+    call_sid = options.fetch(:call_sid) { SecureRandom.uuid }
+    account_sid = options.fetch(:account_sid) { SecureRandom.uuid }
+
+    CallProperties.new(
+      voice_url: "https://example.com/twiml",
+      voice_method: "POST",
+      call_sid:,
+      account_sid:,
+      direction: "outbound-api",
+      api_version: "2010-04-01",
+      auth_token: SecureRandom.alphanumeric,
+      default_tts_voice: "Basic.Kal",
+      from: "1000",
+      to: "85512456869",
+      twiml: nil,
+      sip_headers: SIPHeaders.new(
+        destination: "85512456869",
+        call_sid:,
+        account_sid:,
+        carrier_sid: SecureRandom.uuid,
+        call_direction: "outbound",
+        billing_enabled: false,
+        billing_mode: "prepaid",
+        billing_category: "outbound_calls",
+        proxy_address: nil,
+        external_profile: nil
+      ),
+      **options
+    )
+  end
+
+  def stub_controller_voice_commands(controller, voice_commands:)
+    %i[hangup answer reject sleep].each do |arg|
+      allow(controller).to receive(arg)
+    end
+
+    Array(voice_commands).each do |arg|
+      arg, return_value = arg.is_a?(Hash) ? arg.first : arg
+      allow(controller).to receive(arg).and_return(return_value)
+    end
+  end
+
+  def build_fake_call(options = {})
+    variables = options.fetch(:variables, {})
+    variables.reverse_merge!(
+      "variable_sip_from_host" => "192.168.1.1",
+      "variable_sip_to_host" => "192.168.2.1",
+      "variable_sip_network_ip" => "192.168.3.1",
+      "variable_somleng_twiml" => "<Response><Say>Hello, World!</Say><Play>https://example.com/audio.mp3</Play></Response>",
+      "variable_somleng_account_sid" => SecureRandom.uuid,
+      "variable_somleng_account_auth_token" => SecureRandom.alphanumeric,
+      "variable_somleng_carrier_sid" => SecureRandom.uuid,
+      "variable_somleng_call_sid" => SecureRandom.uuid,
+      "variable_somleng_direction" => "inbound",
+      "variable_somleng_api_version" => "2010-04-01",
+      "variable_somleng_to" => "85512456869",
+      "variable_somleng_from" => "1000",
+      "variable_somleng_default_tts_voice" => "Basic.Kal",
+      "variable_somleng_billing_enabled" => false,
+      "variable_somleng_billing_mode" => "prepaid",
+      "variable_somleng_billing_category" => "outbound_calls",
+      "variable_somleng_call_direction" => "inbound"
+    )
+
+    fake_call = instance_spy(
+      Adhearsion::Call,
+      from: "Extension 1000 <#{options.fetch(:from) { '1000' }}@192.168.42.234>",
+      to: "#{options.fetch(:to) { '85512456869' }}@192.168.42.234",
+      id: options.fetch(:id) { SecureRandom.uuid },
+      variables: variables,
+      present?: true
+    )
+    allow(fake_call).to receive(:answer_time).and_return(
+      *Array(
+        options.fetch(:answer_time) { [ nil, Time.now ] }
+      )
+    )
+    fake_call
+  end
+
+  def stub_twiml_request(controller, response:)
+    responses = Array(response).map { |body| { body: } }
+    stub_request(:any, controller.metadata.fetch(:call_properties).voice_url).to_return(*responses)
+  end
+end
+
+RSpec.configure do |config|
+  config.include(CallControllerHelpers, type: :call_controller)
+  config.before(type: :call_controller) do
+    Adhearsion::Logging.silence!
+  end
+end

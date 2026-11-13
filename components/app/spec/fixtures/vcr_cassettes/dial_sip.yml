@@ -1,0 +1,55 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: http://services.lvh.me:3000/outbound_phone_calls
+    body:
+      encoding: UTF-8
+      string: '{"destinations":["sip:alice@sip.example.com"],"parent_call_sid":"f371391e-25cc-4ba6-a752-ec745a59cf06"}'
+    headers:
+      Accept:
+      - application/json
+      Content-Type:
+      - application/json
+      User-Agent:
+      - Faraday v2.14.0
+      Authorization:
+      - Basic c2VydmljZXM6cGFzc3dvcmQ=
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+  response:
+    status:
+      code: 201
+      message: Created
+    headers:
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-Xss-Protection:
+      - '0'
+      X-Content-Type-Options:
+      - nosniff
+      X-Permitted-Cross-Domain-Policies:
+      - none
+      Referrer-Policy:
+      - strict-origin-when-cross-origin
+      Content-Type:
+      - application/vnd.api+json; charset=utf-8
+      Etag:
+      - W/"8c7acb126d0e391d463da5e1c9b90196"
+      Cache-Control:
+      - max-age=0, private, must-revalidate
+      X-Request-Id:
+      - cbebdbf5-01b1-4e89-8b8a-c2c4786ee656
+      X-Runtime:
+      - '0.107412'
+      Server-Timing:
+      - start_processing.action_controller;dur=0.01, sql.active_record;dur=12.92,
+        instantiation.active_record;dur=0.96, start_transaction.active_record;dur=0.00,
+        transaction.active_record;dur=6.69, process_action.action_controller;dur=72.84
+      Content-Length:
+      - '734'
+    body:
+      encoding: UTF-8
+      string: '{"phone_calls":[{"created_at":"2026-02-19T11:06:48Z","updated_at":"2026-02-19T11:06:48Z","sid":"9a25230f-75d9-4280-82b5-7506109168f0","account_sid":"aed0ac11-ea6e-408a-9ffe-cb6567656fcb","carrier_sid":"c7f8279d-2ad6-4956-abc7-f41c1667d2ef","parent_call_sid":"f371391e-25cc-4ba6-a752-ec745a59cf06","from":"+855715100678","direction":"outbound-dial","call_direction":"outbound","routing_parameters":{"address":"alice@sip.example.com","destination":"sip:alice@sip.example.com","dial_string_prefix":null,"plus_prefix":false,"national_dialing":false,"host":"host.docker.internal:5061","username":null,"sip_profile":"nat_gateway"},"billing_parameters":{"enabled":false,"category":"outbound_calls","billing_mode":"prepaid"},"address":null}]}'
+  recorded_at: Thu, 19 Feb 2026 11:06:48 GMT
+recorded_with: VCR 6.4.0

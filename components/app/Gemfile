@@ -1,0 +1,40 @@
+source "https://rubygems.org"
+
+gem "adhearsion", github: "somleng/adhearsion", branch: "develop"
+gem "aws-sdk-lambda"
+gem "aws-sdk-polly"
+gem "blather", github: "adhearsion/blather", branch: "develop"
+gem "connection_pool"
+gem "encrypted_credentials", github: "somleng/encrypted_credentials"
+gem "faraday"
+gem "http"
+gem "okcomputer"
+gem "openssl"
+gem "phony"
+gem "rackup"
+gem "redis"
+gem "reel", github: "somleng/reel", branch: "develop"
+gem "reel-rack", github: "somleng/reel-rack", branch: "develop"
+gem "sentry-ruby"
+gem "sinatra"
+gem "sinatra-contrib", require: false
+gem "skylight"
+gem "sucker_punch"
+gem "tts_voices", github: "somleng/tts_voices"
+
+group :development do
+  gem "rubocop-rails-omakase", require: false
+  gem "rubocop-performance", require: false
+  gem "rubocop-rspec", require: false
+end
+
+group :test do
+  gem "mock_redis"
+  gem "rack-test"
+  gem "rspec"
+  gem "simplecov", require: false
+  gem "simplecov-cobertura", require: false
+  gem "twilio-ruby"
+  gem "vcr"
+  gem "webmock", github: "bblimke/webmock"
+end

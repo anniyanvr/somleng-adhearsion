@@ -1,0 +1,11 @@
+<!-- https://github.com/signalwire/freeswitch/blob/master/src/mod/loggers/mod_console/conf/autoload_configs/console.conf.xml -->
+
+<configuration name="console.conf" description="Console Logger">
+  <mappings>
+    <map name="all" value="console,debug,info,notice,warning,err,crit,alert"/>
+  </mappings>
+  <settings>
+    <param name="colorize" value="false"/>
+    <param name="loglevel" value="$${log_level}"/>
+  </settings>
+</configuration>
